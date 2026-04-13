@@ -1,0 +1,202 @@
+:root {
+
+    --page-w: 800px;
+    --page-h: 1131px;
+
+    --bg-color: #e0e2e5;
+
+    --paper-color: #fdfdfb;
+
+    --shadow-soft:
+        0 5px 15px rgba(0,0,0,0.25),
+        0 20px 40px rgba(0,0,0,0.25);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body, html {
+
+    width: 100%;
+    height: 100%;
+
+    background: var(--bg-color);
+
+    overflow: hidden;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    font-family: 'Noto Serif KR', serif;
+}
+
+#viewport {
+
+    width: 100vw;
+    height: 100vh;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    perspective: 2000px;
+}
+
+#main-scaler {
+
+    display: flex;
+
+    gap: 6px;
+
+    transform-origin: center center;
+
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.page {
+
+    width: var(--page-w);
+    height: var(--page-h);
+
+    background: var(--paper-color);
+
+    position: relative;
+
+    display: none;
+
+    flex-shrink: 0;
+
+    box-shadow: var(--shadow-soft);
+
+    overflow: hidden;
+}
+
+/* 페이지 내부 여백 */
+
+.content {
+
+    padding: 30px 60px;
+
+    color: #222;
+}
+
+.page.left-page {
+
+    border-radius: 5px 0 0 5px;
+
+    background: linear-gradient(
+        to right,
+        #fdfdfb 94%,
+        #e0e0d0 100%
+    );
+}
+
+.page.right-page {
+
+    border-radius: 0 5px 5px 0;
+
+    background: linear-gradient(
+        to left,
+        #fdfdfb 94%,
+        #e0e0d0 100%
+    );
+}
+
+.page-num {
+
+    position: absolute;
+
+    bottom: 50px;
+    left: 0;
+
+    width: 100%;
+
+    text-align: center;
+
+    font-size: 14px;
+
+    color: #777;
+
+    letter-spacing: 2px;
+}
+
+/* 텍스트 스타일 */
+
+.content h1 {
+
+    font-size: 2.3rem;
+
+    margin-top: 2rem;
+
+    margin-bottom: 2rem;
+
+    border-bottom: 1px solid #ddd;
+
+    padding-bottom: 1rem;
+}
+
+.content h2 {
+
+    font-size: 1.5rem;
+
+    margin-top: 1.6rem;
+
+    margin-bottom: 0.7rem;
+}
+
+.content p {
+
+    font-size: 1.25rem;
+
+    line-height: 1.9;
+
+    text-align: justify;
+}
+
+.note {
+  font-size: 0.7em;      /* 글자 작게 */
+  color: #444;           /* 회색 */
+  margin-left: 6px;      /* 제목과 약간 간격 */
+  vertical-align: super; /* 살짝 위로 */
+}
+
+.note::before {
+  content: "*";
+}
+
+.red {
+  color: #e53935;
+}
+
+.blue {
+  color: #1e88e5;
+}
+
+/* 종이 질감 */
+
+.page::before {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background-image: url(
+        "https://www.transparenttextures.com/patterns/paper-fibers.png"
+    );
+
+    opacity: 0.3;
+
+    pointer-events: none;
+}
