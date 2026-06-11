@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>원 그리기 테스트</title>
+    <style>
+        :root {
+            --bg-color: #f1f3f5;
+            --border-color: #e2e8f0;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --canvas-bg: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* 메인 프레임: 가로세로 균형을 맞추기 위한 최적의 패딩 */
+        .app-frame {
+            display: flex;
+            background-color: var(--canvas-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            padding: 24px;
+            gap: 24px;
+            box-sizing: border-box;
+        }
+
+        /* 왼쪽 그리기 영역 */
+        .main-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .title-group {
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.02em;
+        }
+
+        .desc {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin: 2px 0 0 0;
+        }
+
+        /* 그리기 창 스케일 업 (460 -> 540) */
+        #canvas-wrapper {
+            position: relative;
+            background-color: var(--canvas-bg);
+            border: 1px solid #94a3b8; /* 한층 더 또렷해진 캔버스 경계 */
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        /* 계기판 컴팩트화 */
+        .dashboard {
+            margin-top: 12px;
+            display: flex;
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: #f8fafc;
+        }
+
+        .stat-group {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .stat-group:last-child {
+            border-right: none;
+            background-color: #f1f5f9;
+            border-radius: 0 5px 5px 0;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 1px;
+        }
+
+        .stat-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #score-value {
+            font-size: 1.1rem;
+            color: #0f172a;
+        }
+
+        .btn-clear {
+            width: 100%;
+            background-color: #1e293b;
+            color: #ffffff;
+            border: none;
+            padding: 10px 0;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.1s ease;
+        }
+
+        .btn-clear:hover {
+            background-color: #334155;
+        }
+
+        /* 오른쪽 영역: 10위까지 한눈에 보기 위해 리더보드 압축 */
+        .leaderboard-sidebar {
+            width: 200px;
+            border-left: 1px solid var(--border-color);
+            padding-left: 24px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .leaderboard-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+            color: #0f172a;
+        }
+
+        /* 스크롤바 삭제 및 높이 고정으로 가독성 최적화 */
+        .rank-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px; /* 아이템 간격 압축 */
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        /* 한 줄의 높이를 슬림하게 조절 */
+        .rank-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            background-color: #f8fafc;
+            padding: 4px 6px;
+            border-radius: 4px;
+            border: 1px solid #f1f5f9;
+        }
+
+        .rank-num {
+            font-weight: 700;
+            width: 12px;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            text-align: center;
+        }
+
+        /* 미니 썸네일 컴팩트화 */
+        .rank-thumb {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #e2e8f0;
+            background-color: #ffffff;
+            border-radius: 3px;
+            object-fit: contain;
+        }
+
+        .rank-info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .rank-score {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .rank-date {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+        }
+
+        .empty-msg {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 100px 0;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 820px) {
+            body { padding: 12px; }
+            .app-frame {
+                flex-direction: column;
+                gap: 20px;
+                padding: 16px;
+            }
+            .leaderboard-sidebar {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid var(--border-color);
+                padding-left: 0;
+                padding-top: 16px;
+            }
+            .rank-list {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-frame">
+    <div class="main-area">
+        <div class="title-group">
+            <h1>원 그리기 테스트</h1>
+            <p class="desc">정밀 기하 채점 시스템 (인간형 밸런스 모드)</p>
+        </div>
+
+        <div id="canvas-wrapper">
+            <canvas id="paintCanvas" width="540" height="540"></canvas>
+        </div>
+
+        <div class="dashboard">
+            <div class="stat-group">
+                <div class="stat-label">반지름 오차 (CV)</div>
+                <div id="cv-value" class="stat-value">0.000</div>
+            </div>
+            <div class="stat-group">
+                <div class="stat-label">직선도 (R²)</div>
+                <div id="r2-value" class="stat-value">0.000</div>
+            </div>
+            <div class="stat-group">
+                <div class="stat-label">정확도</div>
+                <div id="score-value" class="stat-value">0.0%</div>
+            </div>
+        </div>
+
+        <button class="btn-clear" id="clearBtn">다시 그리기</button>
+    </div>
+
+    <div class="leaderboard-sidebar">
+        <div class="leaderboard-title">최고 기록 TOP 10</div>
+        <ul class="rank-list" id="rankList">
+            </ul>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('paintCanvas');
+    const ctx = canvas.getContext('2d');
+    const clearBtn = document.getElementById('clearBtn');
+    
+    const cvEl = document.getElementById('cv-value');
+    const r2El = document.getElementById('r2-value');
+    const scoreEl = document.getElementById('score-value');
+    const rankListEl = document.getElementById('rankList');
+
+    let points = [];
+    let isDrawing = false;
+    let hasCalculated = false;
+
+    function drawGrid() {
+        ctx.strokeStyle = '#f1f5f9';
+        ctx.lineWidth = 1;
+        const step = 54; // 540 해상도 균등 분할
+        for (let x = 0; x < canvas.width; x += step) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+        }
+        for (let y = 0; y < canvas.height; y += step) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+        }
+    }
+
+    drawGrid();
+    loadLeaderboard();
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    function startDrawing(e) {
+        if (hasCalculated) return;
+        isDrawing = true;
+        points = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGrid();
+        
+        const pos = getPos(e);
+        points.push(pos);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 3.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    }
+
+    function draw(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const pos = getPos(e);
+        points.push(pos);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+    }
+
+    function stopDrawing() {
+        if (!isDrawing) return;
+        isDrawing = false;
+        if (points.length >= 8) {
+            calculateUltimateScore();
+        }
+    }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    window.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('touchstart', startDrawing);
+    canvas.addEventListener('touchmove', draw);
+    window.addEventListener('touchend', stopDrawing);
+
+    clearBtn.addEventListener('click', () => {
+        points = [];
+        isDrawing = false;
+        hasCalculated = false;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGrid();
+        cvEl.textContent = '0.000';
+        r2El.textContent = '0.000';
+        scoreEl.textContent = '0.0%';
+    });
+
+    function fitCircleLeastSquares(pts) {
+        const N = pts.length;
+        let sumX = 0, sumY = 0, sumX2 = 0, sumY2 = 0, sumXY = 0;
+        let sumX3 = 0, sumY3 = 0, sumX2Y = 0, sumXY2 = 0;
+
+        pts.forEach(p => {
+            sumX += p.x; sumY += p.y;
+            sumX2 += p.x * p.x; sumY2 += p.y * p.y;
+            sumXY += p.x * p.y;
+            sumX3 += p.x * p.x * p.x; sumY3 += p.y * p.y * p.y;
+            sumX2Y += p.x * p.x * p.y; sumXY2 += p.x * p.y * p.y;
+        });
+
+        const m11 = sumX2 - (sumX * sumX / N), m12 = sumXY - (sumX * sumY / N);
+        const m21 = m12,                       m22 = sumY2 - (sumY * sumY / N);
+        const b1 = (sumX3 + sumXY2) - (sumX * (sumX2 + sumY2) / N);
+        const b2 = (sumX2Y + sumY3) - (sumY * (sumX2 + sumY2) / N);
+
+        const det = m11 * m22 - m12 * m21;
+        if (Math.abs(det) < 1e-5) return null;
+
+        const xc = (b1 * m22 - b2 * m12) / det / 2;
+        const yc = (m11 * b2 - m21 * b1) / det / 2;
+        return { xc, yc };
+    }
+
+    function calculateUltimateScore() {
+        hasCalculated = true;
+        const N = points.length;
+
+        const center = fitCircleLeastSquares(points);
+        if (!center) return failSystem();
+        const { xc, yc } = center;
+
+        const radii = points.map(p => Math.hypot(p.x - xc, p.y - yc));
+        const meanR = radii.reduce((s, r) => s + r, 0) / N;
+        const variance = radii.reduce((s, r) => s + Math.pow(r - meanR, 2), 0) / N;
+        const stdDevR = Math.sqrt(variance);
+        const CV = stdDevR / meanR;
+
+        let sX = 0, sY = 0, sXY = 0, sX2 = 0, sY2 = 0;
+        points.forEach(p => {
+            sX += p.x; sY += p.y; sXY += p.x * p.y;
+            sX2 += p.x * p.x; sY2 += p.y * p.y;
+        });
+        let divX = Math.max(0, (N * sX2) - (sX * sX));
+        let divY = Math.max(0, (N * sY2) - (sY * sY));
+
+        let R2 = 0;
+        if (divX > 0 && divY > 0) {
+            R2 = Math.pow((N * sXY - sX * sY) / Math.sqrt(divX * divY), 2);
+        } else { R2 = 1.0; }
+
+        cvEl.textContent = CV.toFixed(3);
+        r2El.textContent = R2.toFixed(3);
+
+        const safeR2 = Math.min(R2, 0.999999);
+        const linePenaltyError = Math.log(1 / (1 - safeR2));
+        const combinedError = Math.sqrt(CV * linePenaltyError);
+
+        const k = 4.5; 
+        let finalScore = Math.exp(-Math.sqrt(k * combinedError)) * 100;
+        
+        if (finalScore > 0.1) finalScore += 15;
+        if (R2 > 0.82 || CV > 0.38) finalScore = 0;
+        if (finalScore > 100) finalScore = 100;
+
+        ctx.beginPath();
+        ctx.arc(xc, yc, meanR, 0, Math.PI * 2);
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath(); ctx.arc(xc, yc, 3.5, 0, Math.PI * 2); ctx.fill();
+
+        scoreEl.textContent = `${finalScore.toFixed(1)}%`;
+
+        if (finalScore >= 50) {
+            saveRecord(finalScore);
+        }
+    }
+
+    function failSystem() {
+        cvEl.textContent = 'ERR'; r2El.textContent = '1.000';
+        scoreEl.textContent = '0.0%';
+    }
+
+    function saveRecord(score) {
+        const thumbCanvas = document.createElement('canvas');
+        thumbCanvas.width = 60; thumbCanvas.height = 60;
+        const tCtx = thumbCanvas.getContext('2d');
+        tCtx.fillStyle = '#ffffff'; tCtx.fillRect(0,0,60,60);
+        tCtx.drawImage(canvas, 0, 0, 540, 540, 0, 0, 60, 60);
+        const imgData = thumbCanvas.toDataURL('image/jpeg', 0.7);
+
+        let records = JSON.parse(localStorage.getItem('circle_records')) || [];
+        const now = new Date();
+        const dateString = `${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+        
+        records.push({ score: Number(score.toFixed(1)), image: imgData, date: dateString });
+        records.sort((a, b) => b.score - a.score);
+        records = records.slice(0, 10);
+
+        localStorage.setItem('circle_records', JSON.stringify(records));
+        loadLeaderboard();
+    }
+
+    function loadLeaderboard() {
+        const records = JSON.parse(localStorage.getItem('circle_records')) || [];
+        rankListEl.innerHTML = '';
+
+        if (records.length === 0) {
+            rankListEl.innerHTML = '<div class="empty-msg">기록이 없습니다.<br>50점 이상 달성 시<br>랭킹에 등록됩니다.</div>';
+            return;
+        }
+
+        records.forEach((rec, idx) => {
+            const li = document.createElement('li');
+            li.className = 'rank-item';
+            li.innerHTML = `
+                <div class="rank-num">${idx + 1}</div>
+                <img class="rank-thumb" src="${rec.image}" alt="궤적">
+                <div class="rank-info">
+                    <span class="rank-score">${rec.score}%</span>
+                    <span class="rank-date">${rec.date}</span>
+                </div>
+            `;
+            rankListEl.appendChild(li);
+        });
+    }
+</script>
+</body>
+</html>
